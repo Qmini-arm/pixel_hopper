@@ -8,8 +8,12 @@ import sys
 import time
 from pathlib import Path
 
-from .hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
-from .train_hopper import _require_sb3
+try:
+    from .hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
+    from .train_hopper import _require_sb3
+except ImportError:  # Also support ``python play_hopper.py`` from the repo root.
+    from hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
+    from train_hopper import _require_sb3
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -44,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         if mujoco.viewer._MJPYTHON is None:
             raise SystemExit(
                 "macOS viewer must run through mjpython; use "
-                "'.venv/bin/mjpython -m qarm_sim.play_hopper ...'"
+                "'.venv/bin/mjpython play_hopper.py ...'"
             )
     PPO, _, _, _, _ = _require_sb3()
     env = QArmJumpEnv(

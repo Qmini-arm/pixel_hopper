@@ -1,0 +1,3 @@
+[console_scripts]
+qarm-mjlab-play = qarm_mjlab.play:main
+qarm-mjlab-train = qarm_mjlab.train:main

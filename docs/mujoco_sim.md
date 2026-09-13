@@ -95,7 +95,7 @@ uv pip install -r requirements-rl.txt --python .venv/bin/python
 开始训练 PPO（默认 500k 个环境步）：
 
 ```bash
-.venv/bin/python -m qarm_sim.train_hopper \
+.venv/bin/python train_hopper.py \
   --timesteps 500000 \
   --output artifacts/qarm_hopper
 ```
@@ -105,7 +105,7 @@ uv pip install -r requirements-rl.txt --python .venv/bin/python
 先做快速连通性检查可以把步数降到 `10000`。训练完成后运行策略：
 
 ```bash
-.venv/bin/mjpython -m qarm_sim.play_hopper \
+.venv/bin/mjpython play_hopper.py \
   artifacts/qarm_hopper/qarm_hopper_final.zip \
   --episodes 3
 ```
@@ -117,6 +117,46 @@ uv pip install -r requirements-rl.txt --python .venv/bin/python
 `--target-height`（默认 `0.20 m`）、离地且保持基本直立；`play_hopper` 会打印每回合的
 峰值高度和成功状态。实际训练前建议先用较短回合和小步数观察 `peak_height_delta_m`，
 再逐步增加总步数、并根据真实机构的连续力矩重新校准 MJCF 执行器限幅。
+
+## MJLab / MuJoCo-Warp 并行训练
+
+如果需要把当前自由基座任务迁移到 GPU 并行环境，仓库提供了原生 MJLab 配置：
+`qarm_mjlab/`。它复用同一个 `robot_freejoint.xml`，保留四轴直接力矩动作、
+`(0, 1.2, 1.2, 0)` 初始姿态、4 秒回合、0.20 m 跳高目标和原任务的 25 维归一化观测。
+MJLab 的每个控制步对应 10 个 1 ms MuJoCo 步，默认创建 4096 个并行环境。
+
+推荐使用 Python 3.10--3.13 和 `uv` 安装（训练需要 NVIDIA GPU；CPU 可用于 smoke test）：
+
+```bash
+uv venv --python 3.11
+uv pip install -e . --python .venv/bin/python
+
+# 先用少量环境确认模型、传感器和奖励可以运行
+PYTHONPATH=. .venv/bin/python - <<'PY'
+import torch
+from mjlab.envs import ManagerBasedRlEnv
+from qarm_mjlab.env_cfg import make_qarm_jump_env_cfg
+
+env = ManagerBasedRlEnv(make_qarm_jump_env_cfg(num_envs=4), device="cpu")
+obs, _ = env.reset(seed=0)
+obs, reward, terminated, truncated, _ = env.step(torch.zeros((4, 4)))
+print({name: tuple(value.shape) for name, value in obs.items()})
+env.close()
+PY
+
+# GPU 训练；--timesteps 仍表示总环境步数
+.venv/bin/qarm-mjlab-train --num-envs 4096 --timesteps 500000 \
+  --output artifacts/qarm_mjlab
+
+# 运行 checkpoint（无窗口；--viewer native 或 viser 可视化）
+.venv/bin/qarm-mjlab-play \
+  artifacts/qarm_mjlab/logs/rsl_rl/qarm_jump/<run>/model_<step>.pt \
+  --viewer viser --steps 1000
+```
+
+也可以在 Python 中调用 `qarm_mjlab.tasks.register()`，把任务注册为
+`Qarm-FreeBase-Jump`，交给 MJLab 自带的 task registry 使用。原来的
+`hopper_env.py` + Stable-Baselines3 路径仍然保留，便于在没有 CUDA/MJWarp 的环境中调试。
 
 `demo` 默认在 `[0, 0.8, 0.2, 0] rad` 保持当前位置，并使用 MuJoCo 的
 `qfrc_bias` 计算理想重力前馈。可通过 `--target J1 J2 J3 J4`、`--kp`、`--kd`、

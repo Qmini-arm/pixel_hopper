@@ -1,0 +1,20 @@
+[project]
+name = "qarm-mjlab"
+version = "0.1.0"
+description = "MJLab free-base Qarm jumping task"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "mjlab>=1.6,<2",
+]
+
+[project.scripts]
+qarm-mjlab-train = "qarm_mjlab.train:main"
+qarm-mjlab-play = "qarm_mjlab.play:main"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["qarm_mjlab"]
+

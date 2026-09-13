@@ -1,0 +1,2 @@
+# MJLab includes MuJoCo-Warp, RSL-RL, PyTorch, and the viewer dependencies.
+mjlab>=1.6,<2

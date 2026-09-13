@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: qarm-mjlab
+Version: 0.1.0
+Summary: MJLab free-base Qarm jumping task
+Requires-Python: <3.14,>=3.10
+Requires-Dist: mjlab<2,>=1.6

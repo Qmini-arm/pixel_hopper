@@ -31,7 +31,7 @@ else:
     _gymnasium_import_error = None
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent
 DEFAULT_JUMP_MODEL_PATH = ROOT / "description" / "output_mjcf" / "robot_freejoint.xml"
 JUMP_JOINT_NAMES = ("joint_1", "joint_2", "joint_3", "joint_4")
 FREE_JOINT_NAME = "root_free"

@@ -6,7 +6,7 @@ Install the optional RL dependencies first::
 
 Then run a short smoke training job with::
 
-    .venv/bin/python -m qarm_sim.train_hopper --timesteps 10000
+    .venv/bin/python train_hopper.py --timesteps 10000
 """
 
 from __future__ import annotations
@@ -17,7 +17,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
+try:
+    from .hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
+except ImportError:  # Also support ``python train_hopper.py`` from the repo root.
+    from hopper_env import DEFAULT_JUMP_MODEL_PATH, QArmJumpEnv
 
 
 def _parser() -> argparse.ArgumentParser:
